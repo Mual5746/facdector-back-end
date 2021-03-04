@@ -110,7 +110,7 @@ app.post('/image' , (req , res) => {
         res.status(400).json('not found');
     } 
 })
-
+//comment
 // bcrypt.hash(password, null, null, function(err, hash) {
 //     // Store hash in your password DB.
 //     console.log(hash);
