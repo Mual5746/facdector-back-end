@@ -22,106 +22,94 @@ const db = knex({
 
 const app = express();
 
+const database = {
+    users:[
+        {
+           id : '123',
+           name: 'Jon',
+           password: 'ban',
+           email: 'jon@gmail.com',
+           entries: 0,
+           joined: new Date()
+        },
+        {
+           id : '124',
+           name: 'Jony',
+           password: 'banna',
+           email: 'jony@gmail.com',
+           entries: 0,
+           joined: new Date()
+        },
+    ] ,
+    login: [
+        {
+          id: '987',
+          hash: '',
+          email: 'jon@gmail.com'
+
+    }
+]
+}
 app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', (req, res) => {
     res.send(database.users);
 })
-// signin ----------------------------------------
 app.post('/signin', (req, res) => {
-  db.select('email', 'hash').from('login')
-    .where('email', '=', req.body.email)
-    .then(data => {
-      const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
-      if (isValid) {
-        return db.select('*').from('users')
-          .where('email', '=', req.body.email)
-          .then(user => {
-            res.json(user[0])
-          })
-          .catch(err => res.status(400).json('unable to get user'))
-      } else {
-        res.status(400).json('wrong credentials')
-      }
-    })
-    .catch(err => res.status(400).json('wrong credentials'))
+
+    if (req.body.email === database.users[0].email && 
+        req.body.password === database.users[0].password){
+            res.json('success')
+        } else {
+            res.status(400).json('error logging in')
+        }
 })
 
-// register---------------------------------------
 app.post('/register', (req, res) => {
     const {email, name, password} = req.body;
-    //https://www.npmjs.com/package/bcrypt  from 
-    // Store hash in your password DB.
-    const hash = bcrypt.hashSync(password);
-
-    // Load hash from your password DB.
-    //bcrypt.compareSync(myPlaintextPassword, hash); // true
-    //bcrypt.compareSync(someOtherPlaintextPassword, hash); // false
-      db.transaction(trx =>{
-        trx.insert({
-          hash: hash,
-          email: email
-        })
-        .into('login')
-        .returning('email')
-        .then(loginEmail =>{
-          return trx('users')
-            .returning('*')
-            .insert({
-              email: loginEmail[0],
-              name: name,
-              joined: new Date()
-            })
-            .then( user => {
-              res.json(user)
-            })      
-       })    
-       .then(trx.commit)
-       .catch(trx.rollback) 
-    })    
+      db('users')
+        .returning('*')
+        .insert({
+          email: email,
+          name: name,
+          joined: new Date()
+        
+    })
+    .then( user => {
+      res.json(user)
+    })
      .catch( err => res.status(400).json('unable to register') )
 })
 //profile/:userId --> GET = user 
 app.get('/profile/:id', (req, res) => {
     const { id } = req.params;
-    
-    db.select('*').from('users').where ({id})    
-     .then(user => {
-        if (user.length){
-            res.json(user[0])
-        }else {
-           
-            res.status(400).json('Not found')
-        }        
-    })
-    .catch(err => res.status(400).json('Not found'))
-    
+    let found = false;
+    database.users.forEach( user => {
+      if (user.id === id ){
+          found = true;
+          return res.json(user[0]);
+      } 
+    } )
+    if (!found){
+        res.status(400).json('not found');
+    }
 })
 //image --> PUT --> user   (counting the rank) increase evrytime user use picturex
-app.put('/image' , (req , res) => {
+app.post('/image' , (req , res) => {
     const { id } = req.body;
-    db('users').where('id', '=', id)
-  .increment('entries', 1)
-  .returning('entries')
-  .then(entries => {
-    res.json(entries[0]);
-  })
-  .catch(err => res.status(400).json('unable to get entries'))
+    let found = false;
+    database.users.forEach( user => {
+      if (user.id === id ){
+          found = true;
+          user.entries++
+          return res.json(user.entries);
+      } 
+    })
+    if (!found){
+        res.status(400).json('not found');
+    } 
 })
-
-    // let found = false;
-    // database.users.forEach( user => {
-    //   if (user.id === id ){
-    //       found = true;
-    //       user.entries++
-    //       return res.json(user.entries);
-    //   } 
-    // })
-    // if (!found){
-    //     res.status(400).json('not found');
-    // } 
-
 //comment
 // bcrypt.hash(password, null, null, function(err, hash) {
 //     // Store hash in your password DB.
