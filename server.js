@@ -5,12 +5,14 @@ const cors = require('cors');
 const knex = require ('knex');
 const { response } = require('express');
 
+const register = require('./controllers/register');
+
 const db = knex({
     client: 'pg',
     connection: {
       host : '127.0.0.1',
       user : 'megamax',
-      password : '',
+      password : 'megamax',
       database : 'smart-brain'
     }
   });
@@ -49,39 +51,8 @@ app.post('/signin', (req, res) => {
 })
 
 // register---------------------------------------
-app.post('/register', (req, res) => {
-    const {email, name, password} = req.body;
-    //https://www.npmjs.com/package/bcrypt  from 
-    // Store hash in your password DB.
-    const hash = bcrypt.hashSync(password);
+app.post('/register', (req, res ) => {register.handleRegister(req, res, db, bcrypt)})
 
-    // Load hash from your password DB.
-    //bcrypt.compareSync(myPlaintextPassword, hash); // true
-    //bcrypt.compareSync(someOtherPlaintextPassword, hash); // false
-      db.transaction(trx =>{
-        trx.insert({
-          hash: hash,
-          email: email
-        })
-        .into('login')
-        .returning('email')
-        .then(loginEmail =>{
-          return trx('users')
-            .returning('*')
-            .insert({
-              email: loginEmail[0],
-              name: name,
-              joined: new Date()
-            })
-            .then( user => {
-              res.json(user)
-            })      
-       })    
-       .then(trx.commit)
-       .catch(trx.rollback) 
-    })    
-     .catch( err => res.status(400).json('unable to register') )
-})
 //profile/:userId --> GET = user 
 app.get('/profile/:id', (req, res) => {
     const { id } = req.params;
