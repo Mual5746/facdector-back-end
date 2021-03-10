@@ -1,9 +1,12 @@
 const handleRegister = (req, res, db, bcrypt) => {
     const {email, name, password} = req.body;
+
     //https://www.npmjs.com/package/bcrypt  from 
     // Store hash in your password DB.
     const hash = bcrypt.hashSync(password);
-
+    if ( !email || !name || !password){
+      return res.status(400).json('Registerig är ej korrekt!')
+    }
     // Load hash from your password DB.
     //bcrypt.compareSync(myPlaintextPassword, hash); // true
     //bcrypt.compareSync(someOtherPlaintextPassword, hash); // false
