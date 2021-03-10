@@ -28,6 +28,34 @@ const db = knex({
 
 const app = express();
 
+const database = {
+    users:[
+        {
+           id : '123',
+           name: 'Jon',
+           password: 'ban',
+           email: 'jon@gmail.com',
+           entries: 0,
+           joined: new Date()
+        },
+        {
+           id : '124',
+           name: 'Jony',
+           password: 'banna',
+           email: 'jony@gmail.com',
+           entries: 0,
+           joined: new Date()
+        },
+    ] ,
+    login: [
+        {
+          id: '987',
+          hash: '',
+          email: 'jon@gmail.com'
+
+    }
+]
+}
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -40,6 +68,8 @@ app.post('/register', (req, res ) => {register.handleRegister(req, res, db, bcry
 
 //profile/:userId --> GET = user 
 app.get('/profile/:id', (req, res) => {profile.handleProfileGet(req,res, db)})
+
+
 
 //image --> PUT --> user   (counting the rank) increase evrytime user use picturex
 app.put('/image' , (req, res) => {image.handleImage(req,res, db)})
